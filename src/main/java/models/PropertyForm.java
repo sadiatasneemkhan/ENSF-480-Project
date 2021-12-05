@@ -2,6 +2,7 @@ package models;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.Objects;
 import java.util.Optional;
 
 public class PropertyForm extends DatabaseModel {
@@ -17,6 +18,14 @@ public class PropertyForm extends DatabaseModel {
         this.numberOfBedrooms = numberOfBedrooms;
         this.numberOfBathrooms = numberOfBathrooms;
         this.cityQuadrant = cityQuadrant;
+    }
+
+    public static Optional<PropertyForm> createFromResultSet(final ResultSet rs) throws SQLException {
+        final Property.Type type = Optional.ofNullable(rs.getString("property_type")).map(Property.Type::valueOf).orElse(null);
+        final Integer numberOfBedrooms = rs.getObject("number_of_bedrooms", Integer.class);
+        final Integer numberOfBathrooms = rs.getObject("number_of_bathrooms", Integer.class);
+        final Property.CityQuadrant quadrant = Optional.ofNullable(rs.getString("city_qudrant")).map(Property.CityQuadrant::valueOf).orElse(null);
+        return Optional.of(new PropertyForm(type, numberOfBedrooms, numberOfBathrooms, quadrant));
     }
 
     public Property.Type getPropertyType() {
@@ -51,11 +60,23 @@ public class PropertyForm extends DatabaseModel {
         this.cityQuadrant = cityQuadrant;
     }
 
-    public static Optional<PropertyForm> createFromResultSet(final ResultSet rs) throws SQLException {
-        final Property.Type type = Optional.ofNullable(rs.getString("property_type")).map(Property.Type::valueOf).orElse(null);
-        final Integer numberOfBedrooms = rs.getObject("number_of_bedrooms", Integer.class);
-        final Integer numberOfBathrooms = rs.getObject("number_of_bathrooms", Integer.class);
-        final Property.CityQuadrant quadrant = Optional.ofNullable(rs.getString("city_qudrant")).map(Property.CityQuadrant::valueOf).orElse(null);
-        return Optional.of(new PropertyForm(type, numberOfBedrooms, numberOfBathrooms, quadrant));
+    @Override
+    public boolean equals(final Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        final PropertyForm that = (PropertyForm) o;
+        return propertyType == that.propertyType &&
+                Objects.equals(numberOfBedrooms, that.numberOfBedrooms) &&
+                Objects.equals(numberOfBathrooms, that.numberOfBathrooms) &&
+                cityQuadrant == that.cityQuadrant;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(propertyType, numberOfBedrooms, numberOfBathrooms, cityQuadrant);
     }
 }

@@ -1,4 +1,5 @@
-CREATE DATABASE IF NOT EXISTS rentings;
+DROP DATABASE  IF EXISTS rentings;
+CREATE DATABASE rentings;
 CREATE USER IF NOT EXISTS 'ensf480'@'localhost' IDENTIFIED BY 'password';
 GRANT ALL ON rentings.* to 'ensf480'@'localhost';
 
@@ -9,13 +10,13 @@ CREATE TABLE user (
     username VARCHAR(255) NOT NULL UNIQUE,
     password VARCHAR(255) NOT NULL,
     role VARCHAR(20) NOT NULL,
-    is_registered BOOLEAN NOT NULL DEFAULT false,
+    last_login DATETIME DEFAULT NULL,
     PRIMARY KEY (id)
 );
 
-INSERT INTO user (username, password, role, is_registered)
+INSERT INTO user (username, password, role, last_login)
 VALUES (
-        'manager', 'password', 'MANAGER', true
+        'manager', 'password', 'MANAGER', NOW()
        );
 
 CREATE TABLE manager_configuration (
@@ -41,7 +42,8 @@ CREATE TABLE property (
     landlord VARCHAR(255) NOT NULL,
     is_fee_paid BOOLEAN NOT NULL DEFAULT false,
     property_status VARCHAR(20) NOT NULL,
-    date_published DATETIME,
+    date_published DATETIME DEFAULT NULL,
+    payment_date DATETIME DEFAULT NULL,
 
     PRIMARY KEY (id),
     FOREIGN KEY (landlord) REFERENCES user(username) ON DELETE CASCADE
@@ -57,22 +59,12 @@ CREATE TABLE property_form (
     PRIMARY KEY (id)
 );
 
-CREATE TABLE renter_subscription (
+CREATE TABLE property_subject (
     id INT AUTO_INCREMENT,
-    renter VARCHAR(255) NOT NULL,
-    property_id INT NOT NULL,
+    renter varchar(255) NOT NULL UNIQUE,
+    property_form INT NOT NULL,
 
     PRIMARY KEY (id),
-    FOREIGN KEY (renter) REFERENCES user(username) ON DELETE CASCADE,
-    FOREIGN KEY (property_id) REFERENCES property(id) ON DELETE CASCADE
-);
-
-CREATE TABLE subscribed_property_form (
-    id INT AUTO_INCREMENT,
-    property_form_id INT NOT NULL,
-    renter_subscription_id INT NOT NULL,
-
-    PRIMARY KEY (id),
-    FOREIGN KEY (property_form_id) REFERENCES property_form(id) ON DELETE CASCADE,
-    FOREIGN KEY (renter_subscription_id) REFERENCES renter_subscription(id) ON DELETE CASCADE
+    FOREIGN KEY (renter) references user(username) ON DELETE CASCADE,
+    FOREIGN KEY (property_form) references property_form(id) ON DELETE CASCADE
 );

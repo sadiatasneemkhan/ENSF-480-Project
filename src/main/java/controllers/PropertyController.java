@@ -1,9 +1,6 @@
 package controllers;
 
-import models.Landlord;
-import models.Property;
-import models.PropertyForm;
-import models.User;
+import models.*;
 import util.DatabaseConnection;
 
 import java.sql.*;
@@ -47,18 +44,30 @@ public class PropertyController {
         return property;
     }
 
+    public Optional<Property> getProperty(final int id) {
+        final String query = "SELECT * FROM property WHERE id = ? LIMIT 1";
+        try {
+            final PreparedStatement ps = connection.prepareStatement(query);
+            ps.setInt(1, id);
+
+            final ResultSet rs = ps.executeQuery();
+            return Property.createFromResultSet(rs);
+        } catch (final SQLException e) {
+            e.printStackTrace();
+            return Optional.empty();
+        }
+    }
+
     public Property publishProperty(final Property property) {
         final String query = "UPDATE property SET is_fee_paid = true, property_status = ?, date_published = NOW() LIMIT 1";
         try {
-            final PreparedStatement ps = connection.prepareStatement(query, Statement.RETURN_GENERATED_KEYS);
+            final PreparedStatement ps = connection.prepareStatement(query);
             ps.setString(1, Property.Status.ACTIVE.toString());
 
             final ResultSet rs = ps.getGeneratedKeys();
             if (rs.next()) {
                 final Property updatedProperty = Property.createFromResultSet(rs).get();
                 updatedProperty.setLandlord(property.getLandlord());
-
-
 
                 return updatedProperty;
             }
@@ -68,15 +77,86 @@ public class PropertyController {
         return null;
     }
 
+    public Optional<Property> changePropertyState(final int propertyId, final Property.Status newStatus) {
+        try {
+            if (!checkPropertyExists(propertyId)) {
+                throw new IllegalArgumentException("Property does not exist");
+            }
+        } catch (SQLException throwables) {
+            throwables.printStackTrace();
+            return Optional.empty();
+        }
+
+        final String query = "UPDATE property SET property_status = ? WHERE id = ? LIMIT 1";
+        try {
+            final PreparedStatement ps = connection.prepareStatement(query);
+            ps.setString(1, newStatus.toString());
+            ps.setInt(2, propertyId);
+
+            final int updatedRows = ps.executeUpdate();
+            System.out.println(updatedRows + " row(s) changed from changing property state");
+        } catch (SQLException throwables) {
+            throwables.printStackTrace();
+            return Optional.empty();
+        }
+
+        return getProperty(propertyId);
+    }
+
+    private boolean checkPropertyExists(final int propertyId) throws SQLException {
+        final String query = "SELECT EXISTS(SELECT * FROM property WHERE id = ?)";
+        final PreparedStatement ps = connection.prepareStatement(query);
+        ps.setInt(1, propertyId);
+        final ResultSet rs = ps.executeQuery();
+        return rs.getBoolean(1);
+    }
+
+    public Collection<Property> getPaymentProperties(final Landlord landlord) {
+        final String query = "SELECT * FROM property WHERE landlord = ? AND property_status != ?";
+        final List<Property> results = new ArrayList<>();
+        try {
+            final PreparedStatement ps = connection.prepareStatement(query);
+            ps.setString(1, landlord.getUsername());
+            ps.setString(2, Property.Status.ACTIVE.toString());
+
+            final ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                Property.createFromResultSet(rs).ifPresent(results::add);
+            }
+        } catch (SQLException throwables) {
+            throwables.printStackTrace();
+        }
+        return results;
+    }
+
+
     public Collection<Property> getProperties() {
-        final String query = "SELECT * FROM property WHERE property_status = 'ACTIVE'";
+        final String query = "SELECT * FROM property WHERE property_status = '" + Property.Status.ACTIVE.toString() + "'";
         return internalGetProperties(query);
+    }
+
+    public Optional<Property> fetchProperty(final int id) {
+        final String query = "SELECT * FROM property WHERE id = ? LIMIT 1";
+
+        try (final PreparedStatement ps = connection.prepareStatement(query)) {
+            ps.setInt(1, id);
+            final ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                return Property.createFromResultSet(rs);
+            } else {
+                throw new RuntimeException("Property at id " + id + " could not be fetched");
+            }
+        } catch (final SQLException | RuntimeException throwables) {
+            throwables.printStackTrace();
+            return Optional.empty();
+        }
     }
 
     public Collection<Property> getProperties(final PropertyForm propertyForm) {
         final String query = getPropertyFilterQuery(propertyForm);
         return internalGetProperties(query);
     }
+
 
     public Landlord getLandlord(final Property property) {
         if (property.getLandlord() == null) {
@@ -91,7 +171,7 @@ public class PropertyController {
                             .orElseThrow(() -> new RuntimeException("Could not find landlord at ID " + property.getLandlordId()));
                     property.setLandlord(landlord);
                 }
-            } catch (SQLException throwables) {
+            } catch (final SQLException | RuntimeException throwables) {
                 throwables.printStackTrace();
             }
         }

@@ -1,11 +1,13 @@
 import controllers.LoginController;
-import models.User;
+import view.LoginForm;
 
 public class App {
+    private static final LoginController loginController = LoginController.getOnlyInstance();
     public static void main(final String[] args) {
-        final LoginController loginController = LoginController.getOnlyInstance();
+        javax.swing.SwingUtilities.invokeLater(App::systemFlow);
+    }
 
-        loginController.register("test3", "password", User.UserRole.RENTER).ifPresent(user -> System.out.println(user.getUsername()));
-
+    private static void systemFlow() {
+        final LoginForm loginForm = new LoginForm();
     }
 }

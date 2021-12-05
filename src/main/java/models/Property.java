@@ -18,11 +18,13 @@ public class Property extends DatabaseModel {
     private boolean isFeePaid;
     private Status propertyStatus;
     private LocalDateTime datePublished;
+    private LocalDateTime paymentDate;
+
     public Property(final String address, final Type propertyType, final int numberOfBedrooms,
                     final int numberOfBathrooms, final boolean isFurnished,
                     final CityQuadrant cityQuadrant, final int landlordId,
                     final boolean isFeePaid, final Status propertyStatus,
-                    final LocalDateTime datePublished) {
+                    final LocalDateTime datePublished, final LocalDateTime paymentDate) {
         this.address = address;
         this.propertyType = propertyType;
         this.numberOfBedrooms = numberOfBedrooms;
@@ -33,6 +35,7 @@ public class Property extends DatabaseModel {
         this.isFeePaid = isFeePaid;
         this.propertyStatus = propertyStatus;
         this.datePublished = datePublished;
+        this.paymentDate = paymentDate;
     }
 
     public static Optional<Property> createFromResultSet(final ResultSet rs) throws SQLException {
@@ -47,10 +50,19 @@ public class Property extends DatabaseModel {
         final int landlordId = rs.getInt("landlord");
         final Status status = Status.valueOf(rs.getString("property_status"));
         final LocalDateTime datePublished = rs.getObject("date_published", LocalDateTime.class);
+        final LocalDateTime paymentDate = rs.getObject("payment_date", LocalDateTime.class);
 
-        final Property property = new Property(address, propertyType, numberOfBedrooms, numberOfBathrooms, isFurnished, quadrant, landlordId, isFeePaid, status, datePublished);
+        final Property property = new Property(address, propertyType, numberOfBedrooms, numberOfBathrooms, isFurnished, quadrant, landlordId, isFeePaid, status, datePublished, paymentDate);
         property.setId(id);
         return Optional.of(property);
+    }
+
+    public LocalDateTime getPaymentDate() {
+        return paymentDate;
+    }
+
+    public void setPaymentDate(final LocalDateTime paymentDate) {
+        this.paymentDate = paymentDate;
     }
 
     public int getLandlordId() {
