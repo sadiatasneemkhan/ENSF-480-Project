@@ -7,14 +7,14 @@ USE rentings;
 
 CREATE TABLE user (
     id INT AUTO_INCREMENT,
-    username VARCHAR(255) NOT NULL UNIQUE,
+    email VARCHAR(255) NOT NULL UNIQUE,
     password VARCHAR(255) NOT NULL,
     role VARCHAR(20) NOT NULL,
     last_login DATETIME DEFAULT NULL,
     PRIMARY KEY (id)
 );
 
-INSERT INTO user (username, password, role, last_login)
+INSERT INTO user (email, password, role, last_login)
 VALUES (
         'manager', 'password', 'MANAGER', NOW()
        );
@@ -46,7 +46,7 @@ CREATE TABLE property (
     payment_date DATETIME DEFAULT NULL,
 
     PRIMARY KEY (id),
-    FOREIGN KEY (landlord) REFERENCES user(username) ON DELETE CASCADE
+    FOREIGN KEY (landlord) REFERENCES user(email) ON DELETE CASCADE
 );
 
 CREATE TABLE property_form (
@@ -65,6 +65,6 @@ CREATE TABLE property_subject (
     property_form INT NOT NULL,
 
     PRIMARY KEY (id),
-    FOREIGN KEY (renter) references user(username) ON DELETE CASCADE,
+    FOREIGN KEY (renter) references user(email) ON DELETE CASCADE,
     FOREIGN KEY (property_form) references property_form(id) ON DELETE CASCADE
 );

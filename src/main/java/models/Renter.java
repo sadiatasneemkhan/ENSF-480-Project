@@ -4,8 +4,8 @@ import java.util.Objects;
 
 public class Renter extends User {
 
-    protected Renter(final String username, final String password) {
-        super(username, password);
+    protected Renter(final String email, final String password) {
+        super(email, password);
         this.role = UserRole.RENTER;
     }
 

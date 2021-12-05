@@ -8,13 +8,13 @@ import java.util.Optional;
 abstract public class User extends DatabaseModel {
     private static final String tableName = "user";
 
-    protected String username;
+    protected String email;
     protected String password;
     protected UserRole role;
     protected LocalDateTime lastLogin;
 
-    protected User(final String username, final String password) {
-        this.username = username;
+    protected User(final String email, final String password) {
+        this.email = email;
         this.password = password;
     }
 
@@ -25,12 +25,12 @@ abstract public class User extends DatabaseModel {
                 rs.next();
             }
             final Integer id = rs.getInt("id");
-            final String username = rs.getString("username");
+            final String email = rs.getString("email");
             final String password = rs.getString("password");
             final UserRole role = UserRole.valueOf(rs.getString("role"));
             final LocalDateTime lastLogin = rs.getObject("last_login", LocalDateTime.class);
 
-            user = fromRole(role, username, password);
+            user = fromRole(role, email, password);
             user.setId(id);
             user.setLastLogin(lastLogin);
         } catch (final SQLException e) {
@@ -39,18 +39,18 @@ abstract public class User extends DatabaseModel {
         return Optional.of(user);
     }
 
-    public static User fromRole(final UserRole role, final String username, final String password) {
+    public static User fromRole(final UserRole role, final String email, final String password) {
         User user = null;
 
         switch (role) {
             case RENTER:
-                user = new Renter(username, password);
+                user = new Renter(email, password);
                 break;
             case LANDLORD:
-                user = new Landlord(username, password);
+                user = new Landlord(email, password);
                 break;
             case MANAGER:
-                user = new Manager(username, password);
+                user = new Manager(email, password);
                 break;
             default:
                 System.err.println("Mismatching role?");
@@ -68,12 +68,12 @@ abstract public class User extends DatabaseModel {
         this.lastLogin = lastLogin;
     }
 
-    public String getUsername() {
-        return username;
+    public String getEmail() {
+        return email;
     }
 
-    public void setUsername(final String username) {
-        this.username = username;
+    public void setEmail(final String email) {
+        this.email = email;
     }
 
     public String getPassword() {
@@ -91,7 +91,7 @@ abstract public class User extends DatabaseModel {
     @Override
     public String toString() {
         return "User{" +
-                "username='" + username + '\'' +
+                "email='" + email + '\'' +
                 ", role=" + role +
                 '}';
     }

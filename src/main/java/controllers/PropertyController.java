@@ -116,7 +116,7 @@ public class PropertyController {
         final List<Property> results = new ArrayList<>();
         try {
             final PreparedStatement ps = connection.prepareStatement(query);
-            ps.setString(1, landlord.getUsername());
+            ps.setString(1, landlord.getEmail());
             ps.setString(2, Property.Status.ACTIVE.toString());
 
             final ResultSet rs = ps.executeQuery();

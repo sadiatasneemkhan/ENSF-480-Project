@@ -46,17 +46,17 @@ public class LoginForm {
         goBack.addActionListener(e -> userRoleFrame.dispose());
 
 		final JPanel basePanel = new JPanel();
-		final JLabel usernameLabel = new JLabel("Username:");
+		final JLabel emailLabel = new JLabel("Email:");
 		final JLabel passwordLabel = new JLabel("Password:");
-		final JTextField usernameText = new JTextField(20);
+		final JTextField emailText = new JTextField(20);
 		final JTextField passwordText = new JTextField(20);
 		
 		final JButton submitButton = new JButton("Submit");
 		final JButton createNewAccountButton = new JButton("Create New Account");
 
 		basePanel.add(goBack);
-		basePanel.add(usernameLabel);
-		basePanel.add(usernameText);
+		basePanel.add(emailLabel);
+		basePanel.add(emailText);
 		basePanel.add(passwordLabel);
 		basePanel.add(passwordText);
 		basePanel.add(submitButton);
@@ -65,18 +65,18 @@ public class LoginForm {
 		userRoleFrame.add(basePanel);
 
 		submitButton.addActionListener(e -> {
-			final String username = usernameText.getText();
+			final String email = emailText.getText();
 			final String password = passwordText.getText();
 
-			loginController.login(username, password);
+			loginController.login(email, password);
 			nextStep();
 		});
 
 		createNewAccountButton.addActionListener(e -> {
-			final String username = usernameText.getText();
+			final String email = emailText.getText();
 			final String password = passwordText.getText();
 
-			loginController.register(username, password, roleToBeRegistered);
+			loginController.register(email, password, roleToBeRegistered);
 			nextStep();
 		});
 	}
