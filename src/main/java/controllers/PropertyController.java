@@ -128,6 +128,20 @@ public class PropertyController {
             return Optional.empty();
         }
     }
+
+    public double getPropertyPaymentFee() {
+	    final String query = "SELECT fees FROM manager_configuration LIMIT 1";
+        try {
+            final PreparedStatement ps = connection.prepareStatement(query);
+            final ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                return rs.getDouble("fees");
+            }
+        } catch (SQLException throwables) {
+            throwables.printStackTrace();
+        }
+        return 0d;
+    }
 	
 	public void payProperty(final int propertyID, double amount, Landlord landlord){
 		PreparedStatement mystmt = null;
@@ -330,25 +344,28 @@ public class PropertyController {
     }
 
     private String getPropertyFilterQuery(final PropertyForm propertyForm) {
-        final StringBuilder sb = new StringBuilder("Select * FROM " + Property.getTableName() + " WHERE property_status = 'ACTIVE'");
+        final StringBuilder sb = new StringBuilder("Select * FROM property WHERE property_status = 'ACTIVE'");
         final Map<String, Object> columnMethodMap = new LinkedHashMap<>();
-        columnMethodMap.put("property_type", propertyForm.getPropertyType());
-        columnMethodMap.put("city_quadrant", propertyForm.getCityQuadrant());
-        columnMethodMap.put("number_of_bathrooms", propertyForm.getNumberOfBathrooms());
-        columnMethodMap.put("number_of_bedrooms", propertyForm.getNumberOfBedrooms());
 
-
-        for (final Map.Entry<String, Object> entry : columnMethodMap.entrySet()) {
-            if (entry.getValue() != null) {
-                sb.append(" AND " + entry.getKey() + " = " + entry.getValue().toString());
-            }
+        if (!Objects.isNull(propertyForm.getPropertyType())) {
+            sb.append(String.format(" AND property_type = '%s'", propertyForm.getPropertyType()));
+        }
+        if (!Objects.isNull(propertyForm.getCityQuadrant())) {
+            sb.append(String.format(" AND city_quadrant = '%s'", propertyForm.getCityQuadrant()));
+        }
+        if (!Objects.isNull(propertyForm.getNumberOfBathrooms())) {
+            sb.append(String.format(" AND number_of_bathrooms = %d", propertyForm.getNumberOfBathrooms()));
+        }
+        if (!Objects.isNull(propertyForm.getNumberOfBedrooms())) {
+            sb.append(String.format(" AND number_of_bedrooms = %d", propertyForm.getNumberOfBathrooms()));
         }
 
-        return sb.toString();
+        final String query = sb.toString();
+        System.out.println("DEBUG: query = " + query);
+        return query;
     }
 
     public static PropertyController getOnlyInstance() {
         return propertyController;
     }
-	
 }

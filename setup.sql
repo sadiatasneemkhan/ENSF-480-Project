@@ -5,12 +5,24 @@ GRANT ALL ON rentings.* to 'ensf480'@'localhost';
 
 USE rentings;
 
+CREATE TABLE property_form (
+   id INT AUTO_INCREMENT,
+   property_type VARCHAR(20),
+   number_of_bedrooms INT,
+   number_of_bathrooms INT,
+   city_quadrant VARCHAR(20),
+
+   PRIMARY KEY (id)
+);
+
 CREATE TABLE user (
     id INT AUTO_INCREMENT,
     email VARCHAR(255) NOT NULL UNIQUE,
     password VARCHAR(255) NOT NULL,
     role VARCHAR(20) NOT NULL,
+    property_form_id INT DEFAULT NULL,
     last_login DATETIME DEFAULT NULL,
+
     PRIMARY KEY (id)
 );
 
@@ -49,22 +61,3 @@ CREATE TABLE property (
     FOREIGN KEY (landlord) REFERENCES user(email) ON DELETE CASCADE
 );
 
-CREATE TABLE property_form (
-    id INT AUTO_INCREMENT,
-    property_type VARCHAR(20),
-    number_of_bedrooms INT,
-    number_of_bathrooms INT,
-    city_quadrant VARCHAR(20),
-
-    PRIMARY KEY (id)
-);
-
-CREATE TABLE property_subject (
-    id INT AUTO_INCREMENT,
-    renter varchar(255) NOT NULL UNIQUE,
-    property_form INT NOT NULL,
-
-    PRIMARY KEY (id),
-    FOREIGN KEY (renter) references user(email) ON DELETE CASCADE,
-    FOREIGN KEY (property_form) references property_form(id) ON DELETE CASCADE
-);

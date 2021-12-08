@@ -20,6 +20,8 @@ public class PropertyForm extends DatabaseModel {
         this.cityQuadrant = cityQuadrant;
     }
 
+    public PropertyForm() { }
+
     public static Optional<PropertyForm> createFromResultSet(final ResultSet rs) throws SQLException {
         final Property.Type type = Optional.ofNullable(rs.getString("property_type")).map(Property.Type::valueOf).orElse(null);
         final Integer numberOfBedrooms = rs.getObject("number_of_bedrooms", Integer.class);

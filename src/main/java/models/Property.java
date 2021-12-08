@@ -8,7 +8,6 @@ import javax.swing.table.*;
 import java.sql.Timestamp;
 
 public class Property extends DatabaseModel {
-    private static final String tableName = "property";
 	private int ID;
     private String address;
     private Type propertyType;

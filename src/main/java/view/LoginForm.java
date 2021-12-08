@@ -2,7 +2,6 @@ package view;
 import javax.swing.*;
 
 import controllers.LoginController;
-import models.Landlord;
 import models.User;
 
 public class LoginForm {
@@ -29,6 +28,15 @@ public class LoginForm {
 
 			p1.add(button);
 		}
+
+		final JButton continueWithoutLoginButton = new JButton("Continue without loggin in (unregistered renter)");
+		continueWithoutLoginButton.addActionListener(e -> {
+			System.out.println("DEBUG: continuing without logging in");
+			userRoleFrame.dispose();
+			new PropertySearchFormView();
+		});
+
+		p1.add(continueWithoutLoginButton);
 
 		userRoleFrame.add(p1);
 	}
@@ -92,7 +100,7 @@ public class LoginForm {
 		loginController.getCurrentUser().ifPresent(user -> {
 			switch (user.getRole()) {
 				case RENTER:
-					// renter view
+					new PropertySearchFormView();
 					break;
 				case LANDLORD:
 					new LandlordView();

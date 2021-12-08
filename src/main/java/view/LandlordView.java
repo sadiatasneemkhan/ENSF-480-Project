@@ -7,6 +7,9 @@ import models.Property;
 import javax.swing.*;
 import java.awt.event.*;
 import java.util.Collection;
+import java.util.Objects;
+import java.util.Vector;
+import java.util.stream.Collectors;
 import javax.swing.table.*;
 
 public class LandlordView {
@@ -76,13 +79,9 @@ public class LandlordView {
 		final JTextField addressText = new JTextField(20);
 		final JTextField numberOfBedroomsText = new JTextField(20);
 		final JTextField numberOfBathroomsText = new JTextField(20);
-
-		// TODO: convert these to use combo box (https://docs.oracle.com/javase/tutorial/uiswing/components/combobox.html)
-		// with Property.Type and Property.Quadrant enums
-		final JTextField houseTypeText = new JTextField(20);
-		final JTextField cityQuadrantText = new JTextField(20);
-		// TODO: convert this to a 'isFurnishedCheckBox'
-		final JTextField furnishText = new JTextField(20);
+		final JComboBox<Property.Type> houseTypeComboBox = new JComboBox<>(Property.Type.values());
+		final JComboBox<Property.CityQuadrant> cityQuadrantComboBox = new JComboBox<>(Property.CityQuadrant.values());
+		final JCheckBox isFurnishedCheckbox = new JCheckBox();
 
 		JButton j7 = new JButton("Submit");
 		JButton j8 = new JButton("Go Back");
@@ -90,15 +89,15 @@ public class LandlordView {
 		p1.add(j1);
 		p1.add(addressText);
 		p1.add(j2);
-		p1.add(houseTypeText);
+		p1.add(houseTypeComboBox);
 		p1.add(j3);
 		p1.add(numberOfBedroomsText);
 		p1.add(j4);
 		p1.add(numberOfBathroomsText);
 		p1.add(j5);
-		p1.add(furnishText);
+		p1.add(isFurnishedCheckbox);
 		p1.add(j6);
-		p1.add(cityQuadrantText);
+		p1.add(cityQuadrantComboBox);
 		p1.add(j7);
 		p1.add(j8);
 
@@ -106,21 +105,20 @@ public class LandlordView {
 
 		j7.addActionListener(e -> {
 			final String address = addressText.getText();
-			final String houseType = houseTypeText.getText();
+			final Property.Type houseType = (Property.Type) houseTypeComboBox.getSelectedItem();
 			final String numberOfBedrooms = numberOfBedroomsText.getText();
 			final String numberOfBathrooms = numberOfBathroomsText.getText();
-			final String furnish = furnishText.getText();
-			final String cityQuadrant = cityQuadrantText.getText();
+			final boolean isFurnished = isFurnishedCheckbox.isSelected();
+			final Property.CityQuadrant cityQuadrant = (Property.CityQuadrant) cityQuadrantComboBox.getSelectedItem();
 
 			try{
 				final int bedrooms = Integer.parseInt(numberOfBedrooms);
 				final int bathrooms = Integer.parseInt(numberOfBathrooms);
 
-				// TODO: use the correct parsed values after setting the inputs above
-				propertyController.uploadProperty(new Property(address, Property.Type.APARTMENT,
-						bedrooms, bathrooms, furnish == null,
-						Property.CityQuadrant.NE, loginController.getCurrentUser().get().getEmail(),
-						false, Property.Status.UNPUBLISHED, null, null));
+				propertyController.uploadProperty(new Property(address, houseType, bedrooms,
+						bathrooms, isFurnished, cityQuadrant,
+						loginController.getCurrentUser().get().getEmail(), false,
+						Property.Status.UNPUBLISHED, null, null));
 
 			} catch (NumberFormatException f){
 				f.printStackTrace();
@@ -142,67 +140,58 @@ public class LandlordView {
 		baseFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         baseFrame.setSize(500,500);
 
-		Collection<Property> properties = propertyController.getPaymentProperties(landlord);
-		JPanel p1 = new JPanel();
+		final Collection<Property> properties = propertyController.getPaymentProperties(landlord);
+		final double paymentFee = propertyController.getPropertyPaymentFee();
+		final JPanel p1 = new JPanel();
 		
-		DefaultTableModel tableModel = Property.getTable(properties);
+		final DefaultTableModel tableModel = Property.getTable(properties);
 
-		JTable table = new JTable(tableModel);
+		final JLabel requiredFeeLabel = new JLabel("Required fee is $" + paymentFee);
+		p1.add(requiredFeeLabel);
+
+		final JTable table = new JTable(tableModel);
 		
-		JScrollPane js = new JScrollPane(table);
+		final JScrollPane js = new JScrollPane(table);
 		
 		p1.add(table);
 		p1.add(js);
 		
-		JLabel j1 = new JLabel("HouseID:");
-		JTextField houseIDText = new JTextField(20);
-		JLabel j2 = new JLabel("Fee Amount:");
-		JTextField amountText = new JTextField(20);
+		final JLabel j1 = new JLabel("HouseID:");
+		final JComboBox<Integer> propertyIdComboBox = new JComboBox<>();
+
+		for (final Property property : properties) {
+			propertyIdComboBox.addItem(property.getID());
+		}
+
+		final JCheckBox payingFeeCheck = new JCheckBox(String.format("Paying $%.2f in fees", paymentFee));
 
 		p1.add(j1);
-		p1.add(houseIDText);
-		p1.add(j2);
-		p1.add(amountText);
+		p1.add(propertyIdComboBox);
+		p1.add(payingFeeCheck);
 
-		JButton submit = new JButton("Submit");
-		
-		JButton goBack = new JButton("Go Back");
+		final JButton submit = new JButton("Submit");
+		final JButton goBack = new JButton("Go Back");
 
 		p1.add(submit);
 		p1.add(goBack);
 
 		baseFrame.add(p1);
-		
-		submit.addActionListener(
-			new ActionListener() {
 
-				public void actionPerformed(ActionEvent e){
-					
-					try{
-						int houseID = Integer.parseInt(houseIDText.getText());
-						double amount = Double.parseDouble(amountText.getText());
-						
-						propertyController.payProperty(houseID, amount, landlord);
-						
-					} catch(NumberFormatException f){
-						f.printStackTrace();
-					}
-					
-					baseFrame.dispose();
-					main();
+		submit.addActionListener(e -> {
+			final Integer propertyId = (Integer) propertyIdComboBox.getSelectedItem();
+			if (!Objects.isNull(propertyId) && payingFeeCheck.isSelected()) {
+				final Property propertyToPublish = properties.stream().filter(p -> p.getID() == propertyId).findFirst().orElse(null);
+				if (!Objects.isNull(propertyToPublish)) {
+					propertyController.publishProperty(propertyToPublish);
 				}
 			}
-		);
+			baseFrame.dispose();
+		});
 
-		goBack.addActionListener(
-			new ActionListener() {
-
-				public void actionPerformed(ActionEvent e){
-					baseFrame.dispose();
-					main();
-				}
-			}
-		);
+		goBack.addActionListener((e) -> {
+			baseFrame.dispose();
+			main();
+		});
 
 	}
 
