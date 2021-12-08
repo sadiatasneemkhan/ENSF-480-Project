@@ -45,7 +45,8 @@ CREATE TABLE property (
     date_published DATETIME DEFAULT NULL,
     payment_date DATETIME DEFAULT NULL,
 
-    PRIMARY KEY (id)
+    PRIMARY KEY (id),
+    FOREIGN KEY (landlord) REFERENCES user(email) ON DELETE CASCADE
 );
 
 CREATE TABLE property_form (

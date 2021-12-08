@@ -18,11 +18,12 @@ public class LoginForm {
 		final JPanel p1 = new JPanel();
 
 		for (User.UserRole role : User.UserRole.values()) {
-			final JButton button = new JButton(role.toString());
+			final JButton button = new JButton(role.toString().substring(0,1).toUpperCase() + role.toString().substring(1).toLowerCase());
 
 			button.addActionListener(e -> {
 				System.out.println("DEBUG: role to be registered is " + role.toString());
 				setRoleToBeRegistered(role);
+				userRoleFrame.dispose();
 				loginView();
 			});
 
@@ -43,7 +44,6 @@ public class LoginForm {
         userRoleFrame.setSize(500,500);
 
         final JButton goBack = new JButton("Go back");
-        goBack.addActionListener(e -> userRoleFrame.dispose());
 
 		final JPanel basePanel = new JPanel();
 		final JLabel emailLabel = new JLabel("Email:");
@@ -69,6 +69,7 @@ public class LoginForm {
 			final String password = passwordText.getText();
 
 			loginController.login(email, password);
+			userRoleFrame.dispose();
 			nextStep();
 		});
 
@@ -77,7 +78,13 @@ public class LoginForm {
 			final String password = passwordText.getText();
 
 			loginController.register(email, password, roleToBeRegistered);
+			userRoleFrame.dispose();
 			nextStep();
+		});
+		
+		goBack.addActionListener(e -> {
+			userRoleFrame.dispose();
+			new LoginForm();
 		});
 	}
 

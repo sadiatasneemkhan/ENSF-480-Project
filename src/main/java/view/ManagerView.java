@@ -1,5 +1,5 @@
 package view;
-import controllers.PropertyController;
+import controllers.DatabaseController;
 import controllers.UserController;
 import models.Landlord;
 import models.Property;
@@ -8,13 +8,15 @@ import models.User;
 
 import javax.swing.*;
 import java.awt.event.*;
+import java.awt.Component;
+import java.awt.Dimension;
 import java.util.ArrayList;
 import java.util.Collection;
 import javax.swing.table.DefaultTableModel;
 
 class ManagerView {
 	final private UserController userController = UserController.getOnlyInstance();
-	final private PropertyController propertyController = PropertyController.getOnlyInstance();
+	final private DatabaseController databaseController = DatabaseController.getOnlyInstance();
 
 	JFrame managerViewFrame = null;
 
@@ -23,7 +25,8 @@ class ManagerView {
 	}
 
 	public void main(){
-		managerViewFrame = new JFrame("Online Application");
+		databaseController.updateDatabase();
+		managerViewFrame = new JFrame("Manager Options");
 		managerViewFrame.setVisible(true);
 		managerViewFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         managerViewFrame.setSize(500,500);
@@ -120,7 +123,102 @@ class ManagerView {
 	}
 
 	public void createSummary(){
+		managerViewFrame = new JFrame("Summary");
+		managerViewFrame.setVisible(true);
+		managerViewFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        managerViewFrame.setSize(500,500);
+		
+		JPanel p1 = new JPanel();
+		
+		JLabel j1 = new JLabel("Period:");
+		JTextField periodText = new JTextField(20);
+		
+		p1.add(j1);
+		p1.add(periodText);
 
+		JButton submit = new JButton("Submit");
+		
+		JButton goBack = new JButton("Go Back");
+
+		p1.add(submit);
+		p1.add(goBack);
+
+		managerViewFrame.add(p1);
+		
+		submit.addActionListener(
+			new ActionListener() {
+
+				public void actionPerformed(ActionEvent e){
+					managerViewFrame.dispose();
+					
+					managerViewFrame = new JFrame("Summary Results");
+					managerViewFrame.setVisible(true);
+					managerViewFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+					managerViewFrame.setSize(500,500);
+					try{
+						
+						int period = Integer.parseInt(periodText.getText());
+						
+						JPanel p2 = new JPanel();
+						
+						JLabel j2 = new JLabel("Number of Houses Listed in the last " + period + " days: " + String.valueOf(databaseController.numberOfHousesListed(period)));
+						JLabel j3 = new JLabel("Number of Houses Rented in the last " + period + " days: " + String.valueOf(databaseController.numberOfHousesRented(period)));
+						JLabel j4 = new JLabel("Total Number of Active Listings: "+ String.valueOf(databaseController.numberOfActiveListings(period)));
+						JLabel j5 = new JLabel("Total Number of Houses Rented in the last " + period + " days: ");
+						
+						DefaultTableModel tableModel = databaseController.getHousesRentedPeriod(period);
+						JTable table = new JTable(tableModel);
+						JScrollPane js = new JScrollPane(table);
+						
+						j2.setAlignmentX(Component.CENTER_ALIGNMENT);
+						j3.setAlignmentX(Component.CENTER_ALIGNMENT);
+						j4.setAlignmentX(Component.CENTER_ALIGNMENT);
+						j5.setAlignmentX(Component.CENTER_ALIGNMENT);
+						
+						p2.add(j2);
+						p2.add(j3);
+						p2.add(j4);
+						p2.add(j5);
+						p2.add(table);
+						p2.add(js);
+						
+						JButton goBack2 = new JButton("Go Back");
+						goBack2.setAlignmentX(Component.CENTER_ALIGNMENT);
+						
+						p2.add(goBack);
+						
+						p2.setLayout(new BoxLayout(p2, BoxLayout.Y_AXIS));
+						managerViewFrame.add(p2);
+						
+						goBack2.addActionListener(
+							new ActionListener() {
+
+								public void actionPerformed(ActionEvent e){
+									managerViewFrame.dispose();
+									main();
+								}
+							}
+						);
+						
+					} catch(NumberFormatException f){
+						f.printStackTrace();
+					}
+					
+
+				}
+			}
+		);
+
+		goBack.addActionListener(
+			new ActionListener() {
+
+				public void actionPerformed(ActionEvent e){
+					managerViewFrame.dispose();
+					main();
+				}
+			}
+		);
+		
 	}
 
 	public void getRenters(){
@@ -129,16 +227,14 @@ class ManagerView {
 		managerViewFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         managerViewFrame.setSize(500,500);
 
-        final Collection<Renter> users = (Collection<Renter>) userController.getUsersOfRole(User.UserRole.RENTER);
         JPanel p1 = new JPanel();
 
-		// TODO: POPULATE THIS TABLE WITH RENTER INFO
-        // DefaultTableModel tableModel = new DefaultTableModel(head, 0);
-		// JTable table = new JTable(tableModel);
+        DefaultTableModel tableModel = databaseController.getUsersOfRole(User.UserRole.RENTER);
+		JTable table = new JTable(tableModel);
+		JScrollPane js = new JScrollPane(table);
 
-
-		// p1.add(table);
-		// p1.add(js);
+		p1.add(table);
+		p1.add(js);
 
 		JButton j3 = new JButton("Go Back");
 		p1.setLayout(new BoxLayout(p1, BoxLayout.Y_AXIS));
@@ -164,11 +260,15 @@ class ManagerView {
 		managerViewFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         managerViewFrame.setSize(500,500);
 
-        Collection<Landlord> landlords = (Collection<Landlord>) userController.getUsersOfRole(User.UserRole.LANDLORD);
-		JPanel p1 = new JPanel();
+        JPanel p1 = new JPanel();
 
-		// TODO: populate grid with landlords
+        DefaultTableModel tableModel = databaseController.getUsersOfRole(User.UserRole.LANDLORD);
+		JTable table = new JTable(tableModel);
+		JScrollPane js = new JScrollPane(table);
 
+		p1.add(table);
+		p1.add(js);
+		
 		JButton j3 = new JButton("Go Back");
 		p1.setLayout(new BoxLayout(p1, BoxLayout.Y_AXIS));
 
@@ -189,22 +289,25 @@ class ManagerView {
 	}
 
 	public void getProperties(){
-		managerViewFrame = new JFrame("All Landlords");
+		managerViewFrame = new JFrame("All Properties");
 		managerViewFrame.setVisible(true);
 		managerViewFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         managerViewFrame.setSize(500,500);
 
 
-		Collection<Property> array = propertyController.getProperties();
+		Collection<Property> properties = databaseController.getAllProperties();
 		JPanel p1 = new JPanel();
-
-		Object[] head = new String[]{"House ID", "Address", "House Type", "Number Of Bedrooms", "Number Of Bathrooms", "Furnish Status", "City Quadrant" , "Landlord Name", "Landlord Email",
-			"Fee Status", "Property Status", "Payment Date"};
-
-		// TODO: populate properties table
+		
+		DefaultTableModel tableModel = Property.getTable(properties);
+		
+		JTable table = new JTable(tableModel);
+		
+		JScrollPane js = new JScrollPane(table);
+		
+		p1.add(table);
+		p1.add(js);
 
 		JButton j3 = new JButton("Go Back");
-		p1.setLayout(new BoxLayout(p1, BoxLayout.Y_AXIS));
 
 		p1.add(j3);
 
@@ -222,53 +325,82 @@ class ManagerView {
 	}
 
 	public void changeListingStatus(){
-		managerViewFrame = new JFrame("Change Listing Status");
+		managerViewFrame = new JFrame("Change Listing State");
 		managerViewFrame.setVisible(true);
 		managerViewFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         managerViewFrame.setSize(500,500);
 
-		Collection<Property> properties = propertyController.getProperties();
+		Collection<Property> properties = databaseController.getAllProperties();
 		JPanel p1 = new JPanel();
+		
+		DefaultTableModel tableModel = Property.getTable(properties);
 
-		JLabel j1 = new JLabel("HouseID");
+		JTable table = new JTable(tableModel);
+		
+		JScrollPane js = new JScrollPane(table);
+		
+		p1.add(table);
+		p1.add(js);
+		
+		JLabel j1 = new JLabel("HouseID:");
 		JTextField houseIDText = new JTextField(20);
-
-		// TODO: make this selectable from the Property.status enum, https://docs.oracle.com/javase/tutorial/uiswing/components/combobox.html
-		JLabel j2 = new JLabel("New Listing State");
-		JTextField stateText = new JTextField(20);
-
+		JLabel j2 = new JLabel("New Listing State:");
+		JTextField listingText = new JTextField(20);
+		
 		p1.add(j1);
 		p1.add(houseIDText);
 		p1.add(j2);
-		p1.add(stateText);
+		p1.add(listingText);
+		
 
-		JButton j3 = new JButton("Submit");
-		JButton j4 = new JButton("Go Back");
+		JButton submit = new JButton("Submit");
+		
+		JButton goBack = new JButton("Go Back");
 
-		p1.add(j3);
-		p1.add(j4);
-
+		p1.add(submit);
+		p1.add(goBack);
+		
 		managerViewFrame.add(p1);
-
-		j3.addActionListener(
+		
+		submit.addActionListener(
 			new ActionListener() {
 
 				public void actionPerformed(ActionEvent e){
-					final int houseID = Integer.parseInt(houseIDText.getText());
-
-					// convert this to enum value
-					String state = stateText.getText();
-
-					// TODO: set up the status it's being updated to
-					propertyController.changePropertyState(houseID, Property.Status.RENTED);
-
+					Property.Status listing = Property.Status.ACTIVE;
+					
+					if(listingText.getText().toUpperCase().equals(Property.Status.CANCELLED.toString())){
+						listing = Property.Status.CANCELLED;
+					}
+					
+					else if(listingText.getText().toUpperCase().equals(Property.Status.SUSPENDED.toString())){
+						listing = Property.Status.SUSPENDED;
+					}
+					
+					else if(listingText.getText().toUpperCase().equals(Property.Status.RENTED.toString())){
+						listing = Property.Status.RENTED;
+					}
+					
+					else{
+						changeListingStatus();
+					}
+					
+					try{
+						int houseID = Integer.parseInt(houseIDText.getText());
+						
+						
+						databaseController.changePropertyState(houseID, listing);
+						
+					} catch(NumberFormatException f){
+						f.printStackTrace();
+					}
+					
 					managerViewFrame.dispose();
 					main();
 				}
 			}
 		);
 
-		j4.addActionListener(
+		goBack.addActionListener(
 			new ActionListener() {
 
 				public void actionPerformed(ActionEvent e){
@@ -305,10 +437,11 @@ class ManagerView {
 				public void actionPerformed(ActionEvent e){
 					try{
 						double fee = Double.parseDouble(feeText.getText());
+						databaseController.setFeeAmount(fee);
 					} catch (NumberFormatException f){
 						f.printStackTrace();
 					}
-
+					
 					managerViewFrame.dispose();
 					main();
 				}
@@ -353,6 +486,7 @@ class ManagerView {
 				public void actionPerformed(ActionEvent e){
 					try{
 						int period = Integer.parseInt(periodText.getText());
+						databaseController.setFeePeriod(period);
 					} catch (NumberFormatException f){
 						f.printStackTrace();
 					}
