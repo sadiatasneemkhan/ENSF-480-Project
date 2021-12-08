@@ -2,11 +2,14 @@ package models;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.time.LocalDateTime;
 import java.util.Optional;
+import java.util.Collection;
+import javax.swing.table.*;
+import java.sql.Timestamp;
 
 public class Property extends DatabaseModel {
     private static final String tableName = "property";
+	private int ID;
     private String address;
     private Type propertyType;
     private int numberOfBedrooms;
@@ -14,24 +17,24 @@ public class Property extends DatabaseModel {
     private boolean isFurnished;
     private CityQuadrant cityQuadrant;
     private Landlord landlord;
-    private int landlordId;
+    private String landlordEmail;
     private boolean isFeePaid;
     private Status propertyStatus;
-    private LocalDateTime datePublished;
-    private LocalDateTime paymentDate;
+    private Timestamp datePublished;
+    private Timestamp paymentDate;
 
     public Property(final String address, final Type propertyType, final int numberOfBedrooms,
                     final int numberOfBathrooms, final boolean isFurnished,
-                    final CityQuadrant cityQuadrant, final int landlordId,
+                    final CityQuadrant cityQuadrant, final String landlordEmail,
                     final boolean isFeePaid, final Status propertyStatus,
-                    final LocalDateTime datePublished, final LocalDateTime paymentDate) {
+                    final Timestamp datePublished, final Timestamp paymentDate) {
         this.address = address;
         this.propertyType = propertyType;
         this.numberOfBedrooms = numberOfBedrooms;
         this.numberOfBathrooms = numberOfBathrooms;
         this.isFurnished = isFurnished;
         this.cityQuadrant = cityQuadrant;
-        this.landlordId = landlordId;
+        this.landlordEmail = landlordEmail;
         this.isFeePaid = isFeePaid;
         this.propertyStatus = propertyStatus;
         this.datePublished = datePublished;
@@ -47,30 +50,38 @@ public class Property extends DatabaseModel {
         final boolean isFurnished = rs.getBoolean("is_furnished");
         final CityQuadrant quadrant = CityQuadrant.valueOf(rs.getString("city_quadrant"));
         final boolean isFeePaid = rs.getBoolean("is_fee_paid");
-        final int landlordId = rs.getInt("landlord");
+        final String landlordEmail = rs.getString("landlord");
         final Status status = Status.valueOf(rs.getString("property_status"));
-        final LocalDateTime datePublished = rs.getObject("date_published", LocalDateTime.class);
-        final LocalDateTime paymentDate = rs.getObject("payment_date", LocalDateTime.class);
+        final Timestamp datePublished = rs.getTimestamp("date_published");
+        final Timestamp paymentDate = rs.getTimestamp("payment_date");
 
-        final Property property = new Property(address, propertyType, numberOfBedrooms, numberOfBathrooms, isFurnished, quadrant, landlordId, isFeePaid, status, datePublished, paymentDate);
-        property.setId(id);
+        final Property property = new Property(address, propertyType, numberOfBedrooms, numberOfBathrooms, isFurnished, quadrant, landlordEmail, isFeePaid, status, datePublished, paymentDate);
+		property.setID(id);
         return Optional.of(property);
     }
 
-    public LocalDateTime getPaymentDate() {
+    public Timestamp getPaymentDate() {
         return paymentDate;
     }
 
-    public void setPaymentDate(final LocalDateTime paymentDate) {
+    public void setPaymentDate(final Timestamp paymentDate) {
         this.paymentDate = paymentDate;
     }
 
-    public int getLandlordId() {
-        return landlordId;
+    public String getLandlordEmail() {
+        return landlordEmail;
     }
 
-    public void setLandlordId(final int landlordId) {
-        this.landlordId = landlordId;
+    public void setLandlordEnail(final String landlordEmail) {
+        this.landlordEmail = landlordEmail;
+    }
+	
+	public int getID() {
+        return ID;
+    }
+
+    public void setID(final int ID) {
+        this.ID = ID;
     }
 
     public boolean isFurnished() {
@@ -81,11 +92,11 @@ public class Property extends DatabaseModel {
         isFurnished = furnished;
     }
 
-    public LocalDateTime getDatePublished() {
+    public Timestamp getDatePublished() {
         return datePublished;
     }
 
-    public void setDatePublished(final LocalDateTime datePublished) {
+    public void setDatePublished(final Timestamp datePublished) {
         this.datePublished = datePublished;
     }
 
@@ -160,6 +171,58 @@ public class Property extends DatabaseModel {
     public void setPropertyStatus(final Status propertyStatus) {
         this.propertyStatus = propertyStatus;
     }
+	public static DefaultTableModel getTable(Collection<Property> properties){
+		
+		
+		Object[] head = new String[]{"House ID", "Address", "House Type", "Number Of Bedrooms", "Number Of Bathrooms", "Furnish Status", "City Quadrant", 
+			"Fee Status", "Property Status", "Date Published", "Payment Date"};
+		
+		DefaultTableModel tableModel = new DefaultTableModel(head, 0);
+		tableModel.addRow(head);
+		
+		for (final Property property : properties) {
+			String furnish = "";
+			String feeStatus = "";
+			String payDate = "";
+			String pubDate = "";
+			
+			if(property.getIsFurnished() == true){
+				furnish = "True";
+			}
+			else{
+				furnish = "False";
+			}
+			
+			if(property.isFeePaid() == true){
+				feeStatus = "True";
+			}
+			else{
+				feeStatus = "False";
+			}
+			
+			if(property.getDatePublished() == null){
+				payDate = "Null";
+			}
+			else{
+				payDate = property.getDatePublished().toString();
+			}
+			
+			if(property.getPaymentDate() == null){
+				pubDate = "Null";
+			}
+			else{
+				pubDate = property.getPaymentDate().toString();
+			}
+			
+			Object[] data = {Integer.toString(property.getID()), property.getAddress(), property.getPropertyType().toString(), Integer.toString(property.getNumberOfBedrooms()), 
+				Integer.toString(property.getNumberOfBathrooms()), furnish, property.getCityQuadrant().toString(), feeStatus, property.getPropertyStatus().toString(), 
+					payDate, pubDate};
+					
+			tableModel.addRow(data);
+		}
+		
+		return tableModel;
+	}
 
     public enum CityQuadrant {
         NW,
@@ -173,7 +236,8 @@ public class Property extends DatabaseModel {
         ACTIVE,
         RENTED,
         CANCELLED,
-        SUSPENDED
+        SUSPENDED, 
+		EXPIRED
     }
 
     public enum Type {

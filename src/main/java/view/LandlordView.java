@@ -7,6 +7,7 @@ import models.Property;
 import javax.swing.*;
 import java.awt.event.*;
 import java.util.Collection;
+import javax.swing.table.*;
 
 public class LandlordView {
 	final private PropertyController propertyController = PropertyController.getOnlyInstance();
@@ -23,6 +24,8 @@ public class LandlordView {
 		landlord = (Landlord) loginController.getCurrentUser()
 				.filter(user -> user instanceof Landlord)
 				.orElseThrow(() -> new IllegalStateException("Current user must be landlord."));
+		
+		propertyController.updateDatabase();
 
 		baseFrame = new JFrame("Online Application");
 		baseFrame.setVisible(true);
@@ -116,7 +119,7 @@ public class LandlordView {
 				// TODO: use the correct parsed values after setting the inputs above
 				propertyController.uploadProperty(new Property(address, Property.Type.APARTMENT,
 						bedrooms, bathrooms, furnish == null,
-						Property.CityQuadrant.NE, loginController.getCurrentUser().get().getId(),
+						Property.CityQuadrant.NE, loginController.getCurrentUser().get().getEmail(),
 						false, Property.Status.UNPUBLISHED, null, null));
 
 			} catch (NumberFormatException f){
@@ -141,102 +144,57 @@ public class LandlordView {
 
 		Collection<Property> properties = propertyController.getPaymentProperties(landlord);
 		JPanel p1 = new JPanel();
+		
+		DefaultTableModel tableModel = Property.getTable(properties);
 
-		for (final Property property : properties) {
-			p1.add(new JLabel(property.getAddress()));
-		}
+		JTable table = new JTable(tableModel);
+		
+		JScrollPane js = new JScrollPane(table);
+		
+		p1.add(table);
+		p1.add(js);
+		
+		JLabel j1 = new JLabel("HouseID:");
+		JTextField houseIDText = new JTextField(20);
+		JLabel j2 = new JLabel("Fee Amount:");
+		JTextField amountText = new JTextField(20);
 
-		// TODO: make this work directly with `Property` objects
-		// a good idea would be to make a new class like "PropertyLine" which returns
-		// a JFrame with all the property details populated, since there's super similar display in a lot of the other
-		// views
+		p1.add(j1);
+		p1.add(houseIDText);
+		p1.add(j2);
+		p1.add(amountText);
 
+		JButton submit = new JButton("Submit");
+		
+		JButton goBack = new JButton("Go Back");
 
-//		Object[] head = new String[]{"House ID", "Address", "House Type", "Number Of Bedrooms", "Number Of Bathrooms", "Furnish Status", "City Quadrant" , "Landlord Name", "Landlord Email",
-//			"Fee Status", "Property Status", "Payment Date"};
+		p1.add(submit);
+		p1.add(goBack);
 
-//		DefaultTableModel tableModel = new DefaultTableModel(head, 0);
-//
-//		JTable table = new JTable(tableModel);
-//
-//		tableModel.addRow(head);
-//
-//		for(ArrayList<String> temp: array){
-//			String houseID = temp.get(0);
-//			String address = temp.get(1);
-//			String houseType = temp.get(2);
-//			String numberOfBedrooms = temp.get(3);
-//			String numberOfBathrooms = temp.get(4);
-//			String furnishStatus = temp.get(5);
-//			String cityQuadrant = temp.get(6);
-//			String landlordName = temp.get(7);
-//			String landlordEmail = temp.get(8);
-//
-//			String feeStatus = "";
-//			if(temp.get(9).equals("0")){
-//				feeStatus = "False";
-//			}
-//			else{
-//				feeStatus = "True";
-//			}
-//			String propertyStatus = temp.get(10);
-//
-//			String paymentDate = "";
-//			if(temp.get(11) == null){
-//				paymentDate = "NULL";
-//			}
-//			else{
-//				paymentDate = temp.get(11);
-//			}
-//
-//			Object[] data = {houseID, address, houseType, numberOfBedrooms, numberOfBathrooms, furnishStatus, cityQuadrant, landlordName, landlordEmail, feeStatus, propertyStatus, paymentDate};
-//			tableModel.addRow(data);
-//		}
-//
-//		JScrollPane js = new JScrollPane(table);
-//
-//		p1.add(table);
-//		p1.add(js);
-//
-//		JLabel j1 = new JLabel("HouseID");
-//		JTextField houseIDText = new JTextField(20);
-//		JLabel j2 = new JLabel("Payment Amount");
-//		JTextField stateText = new JTextField(20);
-//
-//		p1.add(j1);
-//		p1.add(houseIDText);
-//		p1.add(j2);
-//		p1.add(stateText);
-//
-//		JButton j3 = new JButton("Submit");
-		JButton j4 = new JButton("Go Back");
-//
-//		p1.add(j3);
-		p1.add(j4);
-//
 		baseFrame.add(p1);
-//
-//		j3.addActionListener(
-//			new ActionListener() {
-//
-//				public void actionPerformed(ActionEvent e){
-//					String houseID = houseIDText.getText();
-//
-//					try{
-//						double fee = Double.parseDouble(stateText.getText());
-//
-//						propertyController.payFee(houseID, fee, landlord.getName());
-//					} catch(NumberFormatException f){
-//						f.printStackTrace();
-//					}
-//
-//					baseFrame.dispose();
-//					main();
-//				}
-//			}
-//		);
-//
-		j4.addActionListener(
+		
+		submit.addActionListener(
+			new ActionListener() {
+
+				public void actionPerformed(ActionEvent e){
+					
+					try{
+						int houseID = Integer.parseInt(houseIDText.getText());
+						double amount = Double.parseDouble(amountText.getText());
+						
+						propertyController.payProperty(houseID, amount, landlord);
+						
+					} catch(NumberFormatException f){
+						f.printStackTrace();
+					}
+					
+					baseFrame.dispose();
+					main();
+				}
+			}
+		);
+
+		goBack.addActionListener(
 			new ActionListener() {
 
 				public void actionPerformed(ActionEvent e){
@@ -249,104 +207,89 @@ public class LandlordView {
 	}
 
 	public void changeListingStatus(){
-		// TODO: you can use propertyController.changePropertyState
+		baseFrame = new JFrame("Change Listing State");
+		baseFrame.setVisible(true);
+		baseFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        baseFrame.setSize(500,500);
 
-//		baseFrame = new JFrame("Change Listing Status");
-//		baseFrame.setVisible(true);
-//		baseFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-//        baseFrame.setSize(500,500);
-//
-//		ArrayList<ArrayList<String>> array = propertyController.getLandlordProperties(landlord.getName());
-//		JPanel p1 = new JPanel();
-//
-//		Object[] head = new String[]{"House ID", "Address", "House Type", "Number Of Bedrooms", "Number Of Bathrooms", "Furnish Status", "City Quadrant" , "Landlord Name", "Landlord Email",
-//			"Fee Status", "Property Status", "Payment Date"};
-//
-//		DefaultTableModel tableModel = new DefaultTableModel(head, 0);
-//
-//		JTable table = new JTable(tableModel);
-//
-//		tableModel.addRow(head);
-//
-//		for(ArrayList<String> temp: array){
-//			String houseID = temp.get(0);
-//			String address = temp.get(1);
-//			String houseType = temp.get(2);
-//			String numberOfBedrooms = temp.get(3);
-//			String numberOfBathrooms = temp.get(4);
-//			String furnishStatus = temp.get(5);
-//			String cityQuadrant = temp.get(6);
-//			String landlordName = temp.get(7);
-//			String landlordEmail = temp.get(8);
-//
-//			String feeStatus = "";
-//			if(temp.get(9).equals("0")){
-//				feeStatus = "False";
-//			}
-//			else{
-//				feeStatus = "True";
-//			}
-//			String propertyStatus = temp.get(10);
-//
-//			String paymentDate = "";
-//			if(temp.get(11) == null){
-//				paymentDate = "NULL";
-//			}
-//			else{
-//				paymentDate = temp.get(11);
-//			}
-//
-//			Object[] data = {houseID, address, houseType, numberOfBedrooms, numberOfBathrooms, furnishStatus, cityQuadrant, landlordName, landlordEmail, feeStatus, propertyStatus, paymentDate};
-//			tableModel.addRow(data);
-//		}
-//
-//		JScrollPane js = new JScrollPane(table);
-//
-//		p1.add(table);
-//		p1.add(js);
-//
-//		JLabel j1 = new JLabel("HouseID");
-//		JTextField houseIDText = new JTextField(20);
-//		JLabel j2 = new JLabel("New Listing State");
-//		JTextField stateText = new JTextField(20);
-//
-//		p1.add(j1);
-//		p1.add(houseIDText);
-//		p1.add(j2);
-//		p1.add(stateText);
-//
-//		JButton j3 = new JButton("Submit");
-//		JButton j4 = new JButton("Go Back");
-//
-//		p1.add(j3);
-//		p1.add(j4);
-//
-//		baseFrame.add(p1);
-//
-//		j3.addActionListener(
-//			new ActionListener() {
-//
-//				public void actionPerformed(ActionEvent e){
-//					String houseID = houseIDText.getText();
-//					String state = stateText.getText();
-//
-//					propertyController.changeListingState(houseID, state, landlord.getName());
-//
-//					baseFrame.dispose();
-//					main();
-//				}
-//			}
-//		);
-//
-//		j4.addActionListener(
-//			new ActionListener() {
-//
-//				public void actionPerformed(ActionEvent e){
-//					baseFrame.dispose();
-//					main();
-//				}
-//			}
-//		);
+		Collection<Property> properties = propertyController.getAllProperties(landlord);
+		JPanel p1 = new JPanel();
+		
+		DefaultTableModel tableModel = Property.getTable(properties);
+
+		JTable table = new JTable(tableModel);
+		
+		JScrollPane js = new JScrollPane(table);
+		
+		p1.add(table);
+		p1.add(js);
+		
+		JLabel j1 = new JLabel("HouseID:");
+		JTextField houseIDText = new JTextField(20);
+		JLabel j2 = new JLabel("New Listing State:");
+		JTextField listingText = new JTextField(20);
+
+		p1.add(j1);
+		p1.add(houseIDText);
+		p1.add(j2);
+		p1.add(listingText);
+
+		JButton submit = new JButton("Submit");
+		
+		JButton goBack = new JButton("Go Back");
+
+		p1.add(submit);
+		p1.add(goBack);
+
+		baseFrame.add(p1);
+		
+		submit.addActionListener(
+			new ActionListener() {
+
+				public void actionPerformed(ActionEvent e){
+					Property.Status listing = Property.Status.ACTIVE;
+					
+					if(listingText.getText().toUpperCase().equals(Property.Status.CANCELLED.toString())){
+						listing = Property.Status.CANCELLED;
+					}
+					
+					else if(listingText.getText().toUpperCase().equals(Property.Status.SUSPENDED.toString())){
+						listing = Property.Status.SUSPENDED;
+					}
+					
+					else if(listingText.getText().toUpperCase().equals(Property.Status.RENTED.toString())){
+						listing = Property.Status.RENTED;
+					}
+					
+					else{
+						changeListingStatus();
+					}
+					
+					try{
+						int houseID = Integer.parseInt(houseIDText.getText());
+						
+						
+						propertyController.changePropertyState(houseID, listing, landlord);
+						
+					} catch(NumberFormatException f){
+						f.printStackTrace();
+					}
+					
+					baseFrame.dispose();
+					main();
+				}
+			}
+		);
+
+		goBack.addActionListener(
+			new ActionListener() {
+
+				public void actionPerformed(ActionEvent e){
+					baseFrame.dispose();
+					main();
+				}
+			}
+		);
 	}
 
 
