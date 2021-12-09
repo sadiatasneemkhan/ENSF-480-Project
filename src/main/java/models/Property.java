@@ -173,7 +173,7 @@ public class Property extends DatabaseModel {
 	public static DefaultTableModel getTable(Collection<Property> properties){
 		
 		
-		Object[] head = new String[]{"House ID", "Address", "House Type", "Number Of Bedrooms", "Number Of Bathrooms", "Furnish Status", "City Quadrant", 
+		Object[] head = new String[]{"House ID", "Address", "House Type", "Bedrooms", "Bathrooms", "Is Furnished", "City Quadrant", 
 			"Fee Status", "Property Status", "Date Published", "Payment Date"};
 		
 		DefaultTableModel tableModel = new DefaultTableModel(head, 0);
