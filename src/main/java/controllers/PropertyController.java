@@ -357,7 +357,7 @@ public class PropertyController {
             sb.append(String.format(" AND number_of_bathrooms = %d", propertyForm.getNumberOfBathrooms()));
         }
         if (!Objects.isNull(propertyForm.getNumberOfBedrooms())) {
-            sb.append(String.format(" AND number_of_bedrooms = %d", propertyForm.getNumberOfBathrooms()));
+            sb.append(String.format(" AND number_of_bedrooms = %d", propertyForm.getNumberOfBedrooms()));
         }
 
         final String query = sb.toString();
