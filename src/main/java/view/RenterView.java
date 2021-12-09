@@ -1,18 +1,15 @@
 package view;
 
 import controllers.LoginController;
-import controllers.PropertyController;
 import models.Property;
 import models.PropertyForm;
 
 import javax.swing.*;
-import javax.swing.table.DefaultTableModel;
 import java.util.*;
 import java.util.stream.Collectors;
 
 public class RenterView {
     private static String BLANK = "";
-    final private PropertyController propertyController = PropertyController.getOnlyInstance();
     final private LoginController loginController = LoginController.getOnlyInstance();
     private JFrame baseFrame;
 
@@ -103,38 +100,9 @@ public class RenterView {
             }
 
             renterViewFrame.dispose();
-            propertyListingView(propertyForm);
+            new PropertyListingView(propertyForm, baseFrame);
+           
         });
-    }
-
-    protected void propertyListingView(final PropertyForm propertyForm) {
-        final JFrame renterViewFrame = new JFrame("All Properties");
-        renterViewFrame.setVisible(true);
-        renterViewFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        renterViewFrame.setSize(500,500);
-
-
-        final Collection<Property> properties = propertyController.getProperties(propertyForm);
-        final JPanel panel = new JPanel();
-
-        final DefaultTableModel tableModel = Property.getTable(properties);
-
-        final JTable propertyTable = new JTable(tableModel);
-
-        final JScrollPane js = new JScrollPane(propertyTable);
-
-        final JButton goBackButton = new JButton("Go back");
-
-        goBackButton.addActionListener(e -> {
-            renterViewFrame.dispose();
-            baseFrame.setVisible(true);
-        });
-
-        panel.add(propertyTable);
-        panel.add(js);
-        panel.add(goBackButton);
-
-        renterViewFrame.add(panel);
     }
 
 
