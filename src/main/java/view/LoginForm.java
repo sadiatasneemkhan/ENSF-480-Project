@@ -16,7 +16,7 @@ public class LoginForm {
 
 		final JPanel p1 = new JPanel();
 
-		for (User.UserRole role : User.UserRole.values()) {
+		for (final User.UserRole role : User.UserRole.values()) {
 			final JButton button = new JButton(role.toString().substring(0,1).toUpperCase() + role.toString().substring(1).toLowerCase());
 
 			button.addActionListener(e -> {
@@ -33,7 +33,7 @@ public class LoginForm {
 		continueWithoutLoginButton.addActionListener(e -> {
 			System.out.println("DEBUG: continuing without logging in");
 			userRoleFrame.dispose();
-			new PropertySearchFormView();
+			new RenterView();
 		});
 
 		p1.add(continueWithoutLoginButton);
@@ -100,7 +100,7 @@ public class LoginForm {
 		loginController.getCurrentUser().ifPresent(user -> {
 			switch (user.getRole()) {
 				case RENTER:
-					new PropertySearchFormView();
+					new RenterView();
 					break;
 				case LANDLORD:
 					new LandlordView();
