@@ -54,7 +54,7 @@ public class LandlordView {
 
 		payFeesButton.addActionListener(e -> {
 			baseFrame.dispose();
-			payFee();
+			payFee(baseFrame);
 		});
 
 		changeListingStatusButton.addActionListener(e -> {
@@ -134,11 +134,11 @@ public class LandlordView {
 		});
 	}
 
-	public void payFee(){
+	public void payFee(JFrame oldFrame){
 		baseFrame = new JFrame("Pay Fee");
 		baseFrame.setVisible(true);
 		baseFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        baseFrame.setSize(500,500);
+        baseFrame.setSize(900,500);
 
 		final Collection<Property> properties = propertyController.getPaymentProperties(landlord);
 		final double paymentFee = propertyController.getPropertyPaymentFee();
@@ -186,6 +186,7 @@ public class LandlordView {
 				}
 			}
 			baseFrame.dispose();
+			oldFrame.setVisible(true);
 		});
 
 		goBack.addActionListener((e) -> {
