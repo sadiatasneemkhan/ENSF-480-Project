@@ -9,7 +9,6 @@ import java.util.Collection;
 import javax.swing.table.*;
 
 public class DatabaseController {
-    private final LoginController loginController = LoginController.getOnlyInstance();
     private final Connection connection = DatabaseConnection.getConnection();
     private static final DatabaseController databaseController = new DatabaseController();
 	
