@@ -1,7 +1,10 @@
 package controllers;
 
+import static java.util.Optional.ofNullable;
+
 import models.*;
 import util.DatabaseConnection;
+import util.PropertyFormUtil;
 
 import java.sql.*;
 import java.util.*;
@@ -9,6 +12,8 @@ import java.util.Calendar;
 
 public class PropertyController {
     private final LoginController loginController = LoginController.getOnlyInstance();
+    private final UserController userController = UserController.getOnlyInstance();
+
     private final Connection connection = DatabaseConnection.getConnection();
     private static final PropertyController propertyController = new PropertyController();
 	
@@ -129,6 +134,54 @@ public class PropertyController {
         }
     }
 
+    public Optional<PropertyForm> savePropertyForm(final PropertyForm form, final Renter renter) {
+	    if (renter.getPropertyFormId() != null) {
+	        clearPropertyForm(renter);
+	        renter.setPropertyFormId(null);
+        }
+
+	    final String query = "INSERT INTO property_form(property_type, number_of_bedrooms, number_of_bathrooms, city_quadrant)" +
+                "VALUES (?, ?, ?, ?)";
+	    try {
+	        final PreparedStatement ps = connection.prepareStatement(query, Statement.RETURN_GENERATED_KEYS);
+	        ps.setString(1, ofNullable(form.getPropertyType()).map(Enum::toString).orElse(null));
+	        ps.setObject(2, form.getNumberOfBedrooms());
+	        ps.setObject(3, form.getNumberOfBathrooms());
+	        ps.setString(4, ofNullable(form.getCityQuadrant()).map(Enum::toString).orElse(null));
+
+	        ps.executeUpdate();
+	        final ResultSet rs = ps.getGeneratedKeys();
+
+	        if (rs.next()) {
+                System.out.println("DEBUG: successfully saved property form for " + renter);
+	            final Integer id = rs.getInt(1);
+	            form.setId(id);
+	            renter.setPropertyFormId(id);
+	            userController.updateUserPropertyForm(renter);
+	            return Optional.of(form);
+            } else {
+                System.err.println("Failed to save property form");
+            }
+        } catch (SQLException throwables) {
+            throwables.printStackTrace();
+        }
+	    return Optional.empty();
+    }
+
+    public Renter clearPropertyForm(final Renter renter) {
+	    final String query = "DELETE FROM property_form WHERE id = ? LIMIT 1";
+	    try {
+	        final PreparedStatement ps = connection.prepareStatement(query);
+	        ps.setInt(1, renter.getPropertyFormId());
+
+	        ps.executeUpdate();
+	        renter.setPropertyFormId(null);
+        } catch (SQLException throwables) {
+            throwables.printStackTrace();
+        }
+	    return renter;
+    }
+
     public double getPropertyPaymentFee() {
 	    final String query = "SELECT fees FROM manager_configuration LIMIT 1";
         try {
@@ -192,7 +245,7 @@ public class PropertyController {
             ps.setString(1, Property.Status.ACTIVE.toString());
             ps.setInt(2, property.getID());
 
-            int row = ps.executeUpdate();
+            final int row = ps.executeUpdate();
 			
         } catch (SQLException throwables) {
             throwables.printStackTrace();
@@ -282,7 +335,7 @@ public class PropertyController {
     }
 
     public Collection<Property> getProperties(final PropertyForm propertyForm) {
-        final String query = getPropertyFilterQuery(propertyForm);
+        final String query = PropertyFormUtil.getPropertyFilterQuery(propertyForm);
         return internalGetProperties(query);
     }
 
@@ -341,28 +394,6 @@ public class PropertyController {
             throwables.printStackTrace();
         }
         return properties;
-    }
-
-    private String getPropertyFilterQuery(final PropertyForm propertyForm) {
-        final StringBuilder sb = new StringBuilder("Select * FROM property WHERE property_status = 'ACTIVE'");
-        final Map<String, Object> columnMethodMap = new LinkedHashMap<>();
-
-        if (!Objects.isNull(propertyForm.getPropertyType())) {
-            sb.append(String.format(" AND property_type = '%s'", propertyForm.getPropertyType()));
-        }
-        if (!Objects.isNull(propertyForm.getCityQuadrant())) {
-            sb.append(String.format(" AND city_quadrant = '%s'", propertyForm.getCityQuadrant()));
-        }
-        if (!Objects.isNull(propertyForm.getNumberOfBathrooms())) {
-            sb.append(String.format(" AND number_of_bathrooms = %d", propertyForm.getNumberOfBathrooms()));
-        }
-        if (!Objects.isNull(propertyForm.getNumberOfBedrooms())) {
-            sb.append(String.format(" AND number_of_bedrooms = %d", propertyForm.getNumberOfBedrooms()));
-        }
-
-        final String query = sb.toString();
-        System.out.println("DEBUG: query = " + query);
-        return query;
     }
 
     public static PropertyController getOnlyInstance() {

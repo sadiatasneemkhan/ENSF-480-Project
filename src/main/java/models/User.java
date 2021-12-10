@@ -12,6 +12,7 @@ abstract public class User extends DatabaseModel {
     protected String password;
     protected UserRole role;
     protected LocalDateTime lastLogin;
+    protected Integer propertyFormId;
 
     protected User(final String email, final String password) {
         this.email = email;
@@ -29,10 +30,12 @@ abstract public class User extends DatabaseModel {
             final String password = rs.getString("password");
             final UserRole role = UserRole.valueOf(rs.getString("role"));
             final LocalDateTime lastLogin = rs.getObject("last_login", LocalDateTime.class);
+            final Integer propertyFormId = rs.getInt("property_form_id");
 
             user = fromRole(role, email, password);
             user.setId(id);
             user.setLastLogin(lastLogin);
+            user.setPropertyFormId(propertyFormId);
         } catch (final SQLException e) {
             e.printStackTrace();
         }
@@ -58,6 +61,14 @@ abstract public class User extends DatabaseModel {
         }
 
         return user;
+    }
+
+    public Integer getPropertyFormId() {
+        return propertyFormId;
+    }
+
+    public void setPropertyFormId(final Integer propertyFormId) {
+        this.propertyFormId = propertyFormId;
     }
 
     public LocalDateTime getLastLogin() {
@@ -88,16 +99,16 @@ abstract public class User extends DatabaseModel {
         return role;
     }
 
+    public void setRole(final UserRole role) {
+        this.role = role;
+    }
+
     @Override
     public String toString() {
         return "User{" +
                 "email='" + email + '\'' +
                 ", role=" + role +
                 '}';
-    }
-
-    public void setRole(final UserRole role) {
-        this.role = role;
     }
 
     public enum UserRole {

@@ -26,7 +26,7 @@ public class PropertyForm extends DatabaseModel {
         final Property.Type type = Optional.ofNullable(rs.getString("property_type")).map(Property.Type::valueOf).orElse(null);
         final Integer numberOfBedrooms = rs.getObject("number_of_bedrooms", Integer.class);
         final Integer numberOfBathrooms = rs.getObject("number_of_bathrooms", Integer.class);
-        final Property.CityQuadrant quadrant = Optional.ofNullable(rs.getString("city_qudrant")).map(Property.CityQuadrant::valueOf).orElse(null);
+        final Property.CityQuadrant quadrant = Optional.ofNullable(rs.getString("city_quadrant")).map(Property.CityQuadrant::valueOf).orElse(null);
         return Optional.of(new PropertyForm(type, numberOfBedrooms, numberOfBathrooms, quadrant));
     }
 
