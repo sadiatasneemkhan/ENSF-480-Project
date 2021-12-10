@@ -6,12 +6,15 @@ import models.PropertyForm;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.table.TableColumn;
+
 import java.util.*;
 import java.util.stream.Collectors;
 
 public class PropertyListingView {
 
     final private PropertyController propertyController = PropertyController.getOnlyInstance();
+    final private static List<String> columnsToRemove = List.of("Fee Status", "Property Status", "Date Published", "Payment Date");
 
     
     PropertyListingView(final PropertyForm propertyForm,JFrame baseFrame) {
@@ -19,7 +22,7 @@ public class PropertyListingView {
         final JFrame propertyViewFrame = new JFrame("All Properties");
         propertyViewFrame.setVisible(true);
         propertyViewFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        propertyViewFrame.setSize(910,500);
+        propertyViewFrame.setSize(610,500);
 
         final Collection<Property> properties = propertyController.getProperties(propertyForm);
         final JPanel panel = new JPanel();
@@ -27,6 +30,12 @@ public class PropertyListingView {
         final DefaultTableModel tableModel = Property.getTable(properties);
 
         final JTable propertyTable = new JTable(tableModel);
+        
+        for (String col : columnsToRemove){
+            
+            TableColumn colFee = propertyTable.getColumn(col); 
+            propertyTable.removeColumn(colFee);     
+        }
 
         final JScrollPane js = new JScrollPane(propertyTable);
 
