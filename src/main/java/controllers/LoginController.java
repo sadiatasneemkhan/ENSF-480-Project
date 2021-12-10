@@ -1,14 +1,24 @@
 package controllers;
 
+import com.mysql.cj.jdbc.JdbcPreparedStatement;
+import models.Property;
+import models.PropertyForm;
+import models.Renter;
 import models.User;
 import util.DatabaseConnection;
+import util.PropertyFormUtil;
 
 import java.sql.*;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 public class LoginController {
     private static final LoginController loginController = new LoginController();
+
     private final Connection connection = DatabaseConnection.getConnection();
 
     private User currentUser = null;
@@ -33,6 +43,9 @@ public class LoginController {
 
                 User updatedUser = user.get();
 
+                if (updatedUser instanceof Renter) {
+                    persistNotificationsForRenter((Renter) updatedUser);
+                }
                 updatedUser = updateUserLastLogin(updatedUser).orElse(updatedUser);
 
                 currentUser = updatedUser;
@@ -99,6 +112,41 @@ public class LoginController {
         return login(email, password);
     }
 
+    public Collection<Property> getNotificationsForRenter(final Renter renter) {
+        final List<Property> notifications = new ArrayList<>();
+        final String query = "SELECT p.* FROM property p " +
+                "INNER JOIN user_notification un ON p.id = un.property_id " +
+                "WHERE un.user_id = ?";
+        try {
+            final PreparedStatement ps = connection.prepareStatement(query);
+            ps.setInt(1, renter.getId());
+
+            final ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                Property.createFromResultSet(rs).ifPresent(notifications::add);
+            }
+
+            clearNotificationsForRenter(renter);
+
+        } catch (SQLException throwables) {
+            throwables.printStackTrace();
+        }
+        return notifications;
+    }
+
+    private void clearNotificationsForRenter(final Renter renter) {
+        final String query = "DELETE FROM user_notification WHERE user_id = ?";
+        try {
+            final PreparedStatement ps = connection.prepareStatement(query);
+            ps.setInt(1, renter.getId());
+
+            final int rowsDeleted = ps.executeUpdate();
+            System.out.println("DEBUG: " + rowsDeleted + " row(s) deleted from user notifications");
+        } catch (SQLException throwables) {
+            throwables.printStackTrace();
+        }
+    }
+
     private boolean checkUserExists(final String email) throws SQLException {
         final String query = "SELECT EXISTS(SELECT * FROM user WHERE email = ?)";
         final PreparedStatement ps = connection.prepareStatement(query);
@@ -107,6 +155,83 @@ public class LoginController {
 
         rs.next();
         return rs.getBoolean(1);
+    }
+
+    public Collection<Property> getPropertiesForUser(final PropertyForm form, final LocalDateTime lastLogin) {
+        final String query = PropertyFormUtil.getPropertyFilterQuery(form) + " AND date_published > ?";
+        return getMatchingPropertiesForUser(query, lastLogin);
+    }
+
+    private Collection<Property> getMatchingPropertiesForUser(final String query, final LocalDateTime lastLogin) {
+        final Collection<Property> properties = new ArrayList<>();
+        try {
+            final PreparedStatement ps = connection.prepareStatement(query);
+            ps.setObject(1, lastLogin);
+
+            System.out.println("DEBUG: query = " + ((JdbcPreparedStatement) ps).getPreparedSql());
+
+            final ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                Property.createFromResultSet(rs).ifPresent(properties::add);
+            }
+
+        } catch (final SQLException throwables) {
+            throwables.printStackTrace();
+        }
+        return properties;
+    }
+
+    public Optional<PropertyForm> getPropertyForm(final Renter renter) {
+        if (renter.getPropertyFormId() == null) {
+            return Optional.empty();
+        }
+
+        final String query = "SELECT property_form.* FROM property_form " +
+                "INNER JOIN user u on property_form.id = u.property_form_id WHERE u.id = ? " +
+                "LIMIT 1";
+        try {
+            final PreparedStatement ps = connection.prepareStatement(query);
+            ps.setInt(1, renter.getId());
+
+            final ResultSet rs = ps.executeQuery();
+
+            if (rs.next()) {
+                System.out.println("DEBUG: property form fetched for " + renter.getId());
+                return PropertyForm.createFromResultSet(rs);
+            }
+        } catch (SQLException throwables) {
+            throwables.printStackTrace();
+        }
+        return Optional.empty();
+    }
+
+    public void persistNotificationsForRenter(final Renter renter) {
+        if (renter.getPropertyFormId() == null) {
+            return;
+        }
+
+        final Optional<PropertyForm> propertyForm = getPropertyForm(renter);
+        propertyForm.ifPresent(form -> {
+            final Collection<Property> matchingProperties = getPropertiesForUser(form, renter.getLastLogin());
+            if (matchingProperties.isEmpty()) {
+                return;
+            }
+            //language=SQL
+            String query = "INSERT INTO user_notification (user_id, property_id) VALUES ";
+            final Collection<String> values = matchingProperties.stream().
+                    map(property -> String.format("(%d, %d)", renter.getId(), property.getID()))
+                    .collect(Collectors.toList());
+            query += String.join(", ", values);
+
+            try {
+                final PreparedStatement ps = connection.prepareStatement(query);
+                final int rowsUpdated = ps.executeUpdate();
+
+                System.out.println("DEBUG: " + rowsUpdated + " row(s) updated from fetching new notifications");
+            } catch (final SQLException throwables) {
+                throwables.printStackTrace();
+            }
+        });
     }
 
     public void logout() {

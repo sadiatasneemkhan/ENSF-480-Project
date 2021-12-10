@@ -61,3 +61,12 @@ CREATE TABLE property (
     FOREIGN KEY (landlord) REFERENCES user(email) ON DELETE CASCADE
 );
 
+CREATE TABLE user_notification (
+    id INT AUTO_INCREMENT,
+    user_id INT,
+    property_id INT,
+    PRIMARY KEY (id),
+    FOREIGN KEY (user_id) REFERENCES user(id) ON DELETE CASCADE,
+    FOREIGN KEY (property_id) REFERENCES property(id) ON DELETE CASCADE
+)
+
