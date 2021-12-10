@@ -21,9 +21,15 @@ public class EmailView {
         final JTextField message = new JTextField(20);
         final JLabel messageLabel = new JLabel("Please enter your message:");
 
+        final JTextField email = new JTextField(20);
+        final JLabel emailLabel = new JLabel("Please enter your email address:");
+
         final JButton submitButton = new JButton("Submit");
 
         panel.add(infoLabel);
+        panel.add(newLine);
+        panel.add(emailLabel);
+        panel.add(email);
         panel.add(newLine);
         panel.add(idLabel);
         panel.add(id);
