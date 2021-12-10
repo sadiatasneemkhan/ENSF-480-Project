@@ -6,6 +6,7 @@ import models.Property;
 
 import javax.swing.*;
 import java.awt.event.*;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Objects;
 import java.util.Vector;
@@ -215,14 +216,19 @@ public class LandlordView {
 		p1.add(js);
 		
 		JLabel j1 = new JLabel("HouseID:");
-		JTextField houseIDText = new JTextField(20);
-		JLabel j2 = new JLabel("New Listing State:");
-		JTextField listingText = new JTextField(20);
+		final JComboBox<Integer> propertyIdComboBox = new JComboBox<>();
+
+		for (final Property property : properties) {
+			propertyIdComboBox.addItem(property.getID());
+		}
+
+		final JLabel j2 = new JLabel("New Listing State:");
+		final JComboBox<Property.Status> propertyStatusComboBox = new JComboBox<>(filterPropertyStatusValues());
 
 		p1.add(j1);
-		p1.add(houseIDText);
+		p1.add(propertyIdComboBox);
 		p1.add(j2);
-		p1.add(listingText);
+		p1.add(propertyStatusComboBox);
 
 		JButton submit = new JButton("Submit");
 		
@@ -237,34 +243,9 @@ public class LandlordView {
 			new ActionListener() {
 
 				public void actionPerformed(ActionEvent e){
-					Property.Status listing = Property.Status.ACTIVE;
-					
-					if(listingText.getText().toUpperCase().equals(Property.Status.CANCELLED.toString())){
-						listing = Property.Status.CANCELLED;
-					}
-					
-					else if(listingText.getText().toUpperCase().equals(Property.Status.SUSPENDED.toString())){
-						listing = Property.Status.SUSPENDED;
-					}
-					
-					else if(listingText.getText().toUpperCase().equals(Property.Status.RENTED.toString())){
-						listing = Property.Status.RENTED;
-					}
-					
-					else{
-						changeListingStatus();
-					}
-					
-					try{
-						int houseID = Integer.parseInt(houseIDText.getText());
-						
-						
-						propertyController.changePropertyState(houseID, listing, landlord);
-						
-					} catch(NumberFormatException f){
-						f.printStackTrace();
-					}
-					
+					final int houseID = (int) propertyIdComboBox.getSelectedItem();
+					final Property.Status newStatus = (Property.Status) propertyStatusComboBox.getSelectedItem();
+					propertyController.changePropertyState(houseID, newStatus, landlord);
 					baseFrame.dispose();
 					main();
 				}
@@ -282,6 +263,7 @@ public class LandlordView {
 		);
 	}
 
-
-
+	private Property.Status[] filterPropertyStatusValues() {
+		return Arrays.stream(Property.Status.values()).filter(status -> !Property.Status.ACTIVE.equals(status)).toArray(Property.Status[]::new);
+	}
 }

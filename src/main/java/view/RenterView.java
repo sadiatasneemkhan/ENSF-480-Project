@@ -47,13 +47,13 @@ public class RenterView {
         final JLabel newLine = new JLabel("<html><br><br><p></p></html>");
 
         final JLabel houseTypeLabel = new JLabel("House Type:");
-        final JComboBox<String> houseTypeComboBox = new JComboBox<>(getEnumStringValuesForCheckbox(Property.Type.values()));
+        final JComboBox<String> houseTypeComboBox = new JComboBox<>(enumStringValues(Property.Type.values()));
         final JLabel numBedroomLabel = new JLabel("Number Of Bedrooms:");
         final JTextField numberOfBedroomsText = new JTextField(20);
         final JLabel numBathroomLabel = new JLabel("Number Of Bathrooms:");
         final JTextField numberOfBathroomsText = new JTextField(20);
         final JLabel cityQuadrantLabel = new JLabel("City quadrant:");
-        final JComboBox<String> cityQuadrantComboBox = new JComboBox<>(getEnumStringValuesForCheckbox(Property.CityQuadrant.values()));
+        final JComboBox<String> cityQuadrantComboBox = new JComboBox<>(enumStringValues(Property.CityQuadrant.values()));
 
         if (loginController.isUserLoggedIn()) {
             final JCheckBox receiveNotificationsForSearch = new JCheckBox("Receive notifications for this search?");
@@ -106,7 +106,7 @@ public class RenterView {
     }
 
 
-    private static String[] getEnumStringValuesForCheckbox(final Enum<?>[] enumValues) {
+    private static String[] enumStringValues(final Enum<?>[] enumValues) {
         final List<String> stringValues = new ArrayList<>();
         stringValues.add(BLANK);
         stringValues.addAll(Arrays.stream(enumValues).map(Enum::toString).collect(Collectors.toList()));
