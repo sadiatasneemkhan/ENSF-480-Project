@@ -343,14 +343,18 @@ class ManagerView {
 		p1.add(js);
 		
 		JLabel j1 = new JLabel("HouseID:");
-		JTextField houseIDText = new JTextField(20);
+		final JComboBox<Integer> propertyIdComboBox = new JComboBox<>();
+
+		for (final Property property : properties) {
+			propertyIdComboBox.addItem(property.getID());
+		}
 		JLabel j2 = new JLabel("New Listing State:");
-		JTextField listingText = new JTextField(20);
+		final JComboBox<Property.Status> propertyStatusComboBox = new JComboBox<>(Property.Status.values());
 		
 		p1.add(j1);
-		p1.add(houseIDText);
+		p1.add(propertyIdComboBox);
 		p1.add(j2);
-		p1.add(listingText);
+		p1.add(propertyStatusComboBox);
 		
 
 		JButton submit = new JButton("Submit");
@@ -366,33 +370,9 @@ class ManagerView {
 			new ActionListener() {
 
 				public void actionPerformed(ActionEvent e){
-					Property.Status listing = Property.Status.ACTIVE;
-					
-					if(listingText.getText().toUpperCase().equals(Property.Status.CANCELLED.toString())){
-						listing = Property.Status.CANCELLED;
-					}
-					
-					else if(listingText.getText().toUpperCase().equals(Property.Status.SUSPENDED.toString())){
-						listing = Property.Status.SUSPENDED;
-					}
-					
-					else if(listingText.getText().toUpperCase().equals(Property.Status.RENTED.toString())){
-						listing = Property.Status.RENTED;
-					}
-					
-					else{
-						changeListingStatus();
-					}
-					
-					try{
-						int houseID = Integer.parseInt(houseIDText.getText());
-						
-						
-						databaseController.changePropertyState(houseID, listing);
-						
-					} catch(NumberFormatException f){
-						f.printStackTrace();
-					}
+					final int houseID = (int) propertyIdComboBox.getSelectedItem();
+					final Property.Status newStatus = (Property.Status) propertyStatusComboBox.getSelectedItem();
+					databaseController.changePropertyState(houseID, newStatus);
 					
 					managerViewFrame.dispose();
 					main();
