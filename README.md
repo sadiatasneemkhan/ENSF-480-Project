@@ -6,7 +6,7 @@ The demonstration begins at 3:41.
 
 # Description
 
-This is a **Property Rental Management System (PRMS)** that has multiple functions and caters to four types of users (landlords, regular renters, registered renters and managers). 
+This application is our term project for ENSF 480 - Principles of Software Design. It is a **Property Rental Management System (PRMS)** that has multiple functions and caters to four types of users (landlords, regular renters, registered renters and managers). 
 
 ## Functionalities 
 - Landlords can login and have the following options:
