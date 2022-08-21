@@ -1,3 +1,9 @@
+# Video Demonstration
+
+https://youtu.be/MZ6zLIa2UrY <br/>
+Please watch the video demonstration to see the functionalities of our Property Rental Management System. 
+The demonstration begins at 3:41.
+
 # Description
 
 This is a **Property Rental Management System (PRMS)** that has multiple functions and caters to four types of users (landlords, regular renters, registered renters and managers). 
@@ -28,13 +34,6 @@ This is a **Property Rental Management System (PRMS)** that has multiple functio
     - Number of properties rented within a period
     - Number of active listings 
     - List of properties rented, displaying landlord's email, property ID and address
-
-
-# Video Demonstration
-
-https://youtu.be/MZ6zLIa2UrY <br/>
-Please watch the video demonstration to see the functionalities of our Property Rental Management System. 
-The demonstration begins at 3:41.
 
 # Setup
 
